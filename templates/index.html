@@ -8,6 +8,7 @@
             <button id="newChatBtn" class="btn primary-btn">
                 <span>+</span> New Chat
             </button>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
         </div>
         <div class="chat-list" id="chatList">
             <!-- Chats will be loaded here -->
@@ -32,10 +33,9 @@
             <div class="chat-section">
                 <div class="chat-history" id="chatHistory"></div>
                 <div class="input-area">
-                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
                     <div class="input-group">
-                        <input type="text" id="questionInput" placeholder="Ask about the image...">
-                        <button id="askBtn" class="btn primary-btn">Ask</button>
+                        <input type="text" id="questionInput" placeholder="Ask about the image..." style="flex: 4;">
+                        <button id="askBtn" class="btn primary-btn" style="flex: 1;">Ask</button>
                     </div>
                     <button id="uploadBtn" class="btn secondary-btn">Upload New Image</button>
                 </div>
@@ -48,22 +48,46 @@
     let currentChatId = null;
     let currentImageUrl = null;
 
+    function resetChatUI() {
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('chatSection').style.display = 'none';
+        document.getElementById('chatHistory').innerHTML = '';
+        document.getElementById('imageUpload').value = '';
+        document.getElementById('previewImage').src = '';
+        document.getElementById('imageDescription').innerHTML = '';
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        const newChatBtn = document.getElementById('newChatBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const askBtn = document.getElementById('askBtn');
+        const questionInput = document.getElementById('questionInput');
+        const imageUpload = document.getElementById('imageUpload');
+
+        if (newChatBtn && imageUpload) {
+            newChatBtn.addEventListener('click', () => {
+                imageUpload.click();
+            });
+        }
+
+        if (uploadBtn && imageUpload) {
+            uploadBtn.addEventListener('click', () => {
+                imageUpload.click();
+            });
+        }
+
+        if (imageUpload) {
+            imageUpload.addEventListener('change', uploadImage);
+        }
+
+        if (askBtn && questionInput) {
+            askBtn.addEventListener('click', askQuestion);
+            questionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') askQuestion();
+            });
+        }
+
         loadChats();
-        
-        document.getElementById('newChatBtn').addEventListener('click', () => {
-            document.getElementById('imageUpload').click();
-        });
-
-        document.getElementById('uploadBtn').addEventListener('click', () => {
-            document.getElementById('imageUpload').click();
-        });
-
-        document.getElementById('imageUpload').addEventListener('change', uploadImage);
-        document.getElementById('askBtn').addEventListener('click', askQuestion);
-        document.getElementById('questionInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') askQuestion();
-        });
     });
 
     async function loadChats() {
@@ -88,8 +112,56 @@
                         <h4 class="chat-title">${chat.title}</h4>
                         <p class="chat-date">${new Date(chat.created_at).toLocaleString()}</p>
                     </div>
+                    <button class="action-btn">⋮</button>
                 `;
-                chatElement.addEventListener('click', () => loadChat(chat.id));
+                
+                const actionMenu = document.createElement('div');
+                actionMenu.className = 'action-menu';
+                actionMenu.innerHTML = `
+                    <button class="rename-btn">Rename</button>
+                    <button class="delete-btn">Delete</button>
+                `;
+                document.body.appendChild(actionMenu);
+            
+                const actionBtn = chatElement.querySelector('.action-btn');
+                
+                actionBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    document.querySelectorAll('.action-menu').forEach(menu => {
+                        if (menu !== actionMenu) menu.style.display = 'none';
+                    });
+                    
+                    const rect = actionBtn.getBoundingClientRect();
+                    actionMenu.style.display = 'block';
+                    actionMenu.style.top = `${rect.bottom + window.scrollY + 5}px`;
+                    actionMenu.style.left = `${rect.left + window.scrollX - 130}px`;
+                });
+            
+                actionMenu.querySelector('.rename-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    actionMenu.style.display = 'none';
+                    renameChat(chat.id);
+                });
+                
+                actionMenu.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    actionMenu.style.display = 'none';
+                    deleteChat(chat.id);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!actionMenu.contains(e.target) && e.target !== actionBtn) {
+                        actionMenu.style.display = 'none';
+                    }
+                });
+                
+                chatElement.addEventListener('click', (e) => {
+                    if (!e.target.closest('.action-btn')) {
+                        loadChat(chat.id);
+                    }
+                });
+                
                 chatList.appendChild(chatElement);
             });
         } catch (error) {
@@ -109,18 +181,14 @@
             currentChatId = chat.id;
             currentImageUrl = chat.image_url;
 
-            // Show chat container and hide empty state
             document.getElementById('chatContainer').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
 
-            // Load image and description
             document.getElementById('previewImage').src = currentImageUrl;
             
-            // Find the first assistant message (description)
             const description = chat.messages.find(m => m.role === 'assistant')?.content || '';
             document.getElementById('imageDescription').innerHTML = marked.parse(description);
 
-            // Load messages
             const chatHistory = document.getElementById('chatHistory');
             chatHistory.innerHTML = '';
             
@@ -181,7 +249,6 @@
         
         if (!question || !currentChatId) return;
 
-        // Add user message immediately
         const chatHistory = document.getElementById('chatHistory');
         chatHistory.innerHTML += `
             <div class="message user-message">
@@ -208,14 +275,13 @@
                 throw new Error(data.error);
             }
 
-            // Add bot response
             chatHistory.innerHTML += `
                 <div class="message bot-message">
                     <div class="message-content">${marked.parse(data.answer)}</div>
                 </div>
             `;
             chatHistory.scrollTop = chatHistory.scrollHeight;
-            await loadChats(); // Refresh chat list
+            await loadChats(); 
         } catch (error) {
             console.error('Error asking question:', error);
             chatHistory.innerHTML += `
@@ -223,6 +289,84 @@
                     <div class="message-content">Error: ${error.message}</div>
                 </div>
             `;
+        }
+    }
+
+    async function renameChat(chatId) {
+        const chatElement = document.querySelector(`.chat-item[data-id="${chatId}"]`);
+        if (!chatElement) return;
+
+        const currentTitle = chatElement.querySelector('.chat-title').textContent;
+        const newTitle = prompt("Enter new chat title:", currentTitle);
+        
+        if (!newTitle || newTitle.trim() === currentTitle) return;
+        
+        try {
+            const response = await fetch(`/chat/${chatId}/rename`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: newTitle.trim()
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            chatElement.querySelector('.chat-title').textContent = newTitle.trim();
+            
+            if (currentChatId === chatId) {
+                const chat = await fetch(`/chat/${chatId}`);
+                const chatData = await chat.json();
+                if (chatData.title) {
+                    chatElement.querySelector('.chat-title').textContent = chatData.title;
+                }
+            }
+        } catch (error) {
+            console.error('Error renaming chat:', error);
+            alert('Failed to rename chat');
+        }
+    }
+    
+    async function deleteChat(chatId) {
+        if (!confirm('Are you sure you want to delete this chat? This cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/chat/${chatId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            const chatElement = document.querySelector(`.chat-item[data-id="${chatId}"]`);
+            if (chatElement) {
+                chatElement.remove();
+            }
+            
+            if (currentChatId === chatId) {
+                currentChatId = null;
+                currentImageUrl = null;
+                document.getElementById('chatContainer').style.display = 'none';
+                document.getElementById('emptyState').style.display = 'flex';
+                resetChatUI();
+            }
+            if (document.querySelectorAll('.chat-item').length === 0) {
+                document.getElementById('chatList').innerHTML = '<p class="no-chats">No chats yet</p>';
+            }
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+            alert('Failed to delete chat');
         }
     }
 </script>

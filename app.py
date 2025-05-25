@@ -10,7 +10,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -110,8 +109,25 @@ def signup():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
         name = request.form.get('name')
 
+        if password != confirm_password:
+            flash('Passwords do not match')
+            return redirect(url_for('signup'))
+
+        if len(password) < 8:
+            flash('Password must be at least 8 characters')
+            return redirect(url_for('signup'))
+
+        if not any(char.isdigit() for char in password):
+            flash('Password must contain at least one number')
+            return redirect(url_for('signup'))
+
+        if not any(char.isupper() for char in password):
+            flash('Password must contain at least one uppercase letter')
+            return redirect(url_for('signup'))
+        
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
             return redirect(url_for('signup'))
@@ -240,6 +256,119 @@ def get_chat(chat_id):
             "timestamp": msg.timestamp.isoformat()
         } for msg in chat.messages]
     })
+
+@app.route('/chat/<int:chat_id>/rename', methods=['POST'])
+@login_required
+def rename_chat(chat_id):
+    data = request.json
+    new_title = data.get('title')
+    
+    if not new_title:
+        return jsonify({"error": "New title is required"}), 400
+    
+    chat = Chat.query.filter_by(id=chat_id, user_id=current_user.id).first()
+    if not chat:
+        return jsonify({"error": "Chat not found"}), 404
+    
+    chat.title = new_title
+    db.session.commit()
+    
+    return jsonify({"success": True, "new_title": new_title})
+
+@app.route('/chat/<int:chat_id>', methods=['DELETE'])
+@login_required
+def delete_chat(chat_id):
+    chat = Chat.query.filter_by(id=chat_id, user_id=current_user.id).first()
+    if not chat:
+        return jsonify({"error": "Chat not found"}), 404
+    
+    try:
+        if chat.image_path:
+            image_path = chat.image_path[1:]  
+            if os.path.exists(image_path):
+                os.remove(image_path)
+    except Exception as e:
+        print(f"Error deleting image file: {e}")
+    
+    db.session.delete(chat)
+    db.session.commit()
+    
+    return jsonify({"success": True})
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html')
+
+@app.route('/profile/update', methods=['POST'])
+@login_required
+def update_profile():
+    data = request.json
+    new_name = data.get('name')
+    new_username = data.get('username')
+    
+    if not new_name or not new_username:
+        return jsonify({"error": "Name and username are required"}), 400
+    
+    if new_username != current_user.username and User.query.filter_by(username=new_username).first():
+        return jsonify({"error": "Username already taken"}), 400
+    
+    current_user.name = new_name
+    current_user.username = new_username
+    db.session.commit()
+    
+    return jsonify({
+        "success": True,
+        "name": current_user.name,
+        "username": current_user.username
+    })
+
+@app.route('/profile/delete', methods=['DELETE'])
+@login_required
+def delete_profile():
+    try:
+        chats = Chat.query.filter_by(user_id=current_user.id).all()
+        for chat in chats:
+            if chat.image_path:
+                try:
+                    image_path = chat.image_path[1:] 
+                    if os.path.exists(image_path):
+                        os.remove(image_path)
+                except Exception as e:
+                    print(f"Error deleting image: {e}")
+        
+        db.session.delete(current_user)
+        db.session.commit()
+        
+        logout_user()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/profile/change-password', methods=['POST'])
+@login_required
+def change_password():
+    data = request.json
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    confirm_password = data.get('confirm_password')
+    
+    if not current_password or not new_password or not confirm_password:
+        return jsonify({"error": "All fields are required"}), 400
+    
+    if new_password != confirm_password:
+        return jsonify({"error": "New passwords don't match"}), 400
+    
+    if not check_password_hash(current_user.password, current_password):
+        return jsonify({"error": "Current password is incorrect"}), 400
+    
+    if check_password_hash(current_user.password, new_password):
+        return jsonify({"error": "New password must be different"}), 400
+    
+    current_user.password = generate_password_hash(new_password)
+    db.session.commit()
+    
+    return jsonify({"success": True})
 
 # Initialize database
 with app.app_context():

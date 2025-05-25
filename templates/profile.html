@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <h2>Your Profile</h2>
+        
+        <div class="profile-info">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" value="{{ current_user.name }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" value="{{ current_user.username }}">
+            </div>
+            
+            <div class="password-change">
+                <h3>Change Password</h3>
+                <div class="form-group">
+                    <label for="current_password">Current Password</label>
+                    <div class="password-input">
+                        <input type="password" id="current_password">
+                        <span class="toggle-password" onclick="togglePassword('current_password')">👁️</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new_password">New Password</label>
+                    <div class="password-input">
+                        <input type="password" id="new_password">
+                        <span class="toggle-password" onclick="togglePassword('new_password')">👁️</span>
+                    </div>
+                    <small class="hint">Must be at least 8 characters with 1 number and 1 uppercase letter</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm New Password</label>
+                    <div class="password-input">
+                        <input type="password" id="confirm_password">
+                        <span class="toggle-password" onclick="togglePassword('confirm_password')">👁️</span>
+                    </div>
+                </div>
+                <button id="changePasswordBtn" class="btn primary-btn">Change Password</button>
+            </div>
+            
+            <div class="profile-actions">
+                <button id="cancelBtn" class="btn secondary-btn" disabled>Cancel</button>
+                <button id="saveBtn" class="btn primary-btn" disabled>Save Changes</button>
+                <button id="deleteBtn" class="btn danger-btn">Delete Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const nameInput = document.getElementById('name');
+        const usernameInput = document.getElementById('username');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        
+        let originalValues = {
+            name: '{{ current_user.name }}',
+            username: '{{ current_user.username }}'
+        };
+        let hasSaved = false;
+
+        function checkChanges() {
+            const hasChanged = nameInput.value !== originalValues.name || 
+                             usernameInput.value !== originalValues.username;
+            saveBtn.disabled = !hasChanged;
+            cancelBtn.disabled = !hasChanged;
+            
+            if (hasChanged && hasSaved) {
+                hasSaved = false;
+            }
+        }
+        
+        nameInput.addEventListener('input', checkChanges);
+        usernameInput.addEventListener('input', checkChanges);
+        
+        saveBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: nameInput.value,
+                        username: usernameInput.value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                originalValues = {
+                    name: data.name,
+                    username: data.username
+                };
+                
+                saveBtn.disabled = true;
+                cancelBtn.disabled = true;
+                hasSaved = true;
+                
+                alert('Profile updated successfully!');
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error('Update error:', error);
+            }
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+            if (!hasSaved) {
+                nameInput.value = originalValues.name;
+                usernameInput.value = originalValues.username;
+                saveBtn.disabled = true;
+                cancelBtn.disabled = true;
+            }
+        });
+        
+        deleteBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure? This will permanently delete your account and all your chats.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/profile/delete', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                window.location.href = '/login';
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error('Delete error:', error);
+            }
+        });
+        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+            const currentPassword = document.getElementById('current_password').value;
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            try {
+                const response = await fetch('/profile/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                document.getElementById('current_password').value = '';
+                document.getElementById('new_password').value = '';
+                document.getElementById('confirm_password').value = '';
+                
+                alert('Password changed successfully!');
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error('Password change error:', error);
+            }
+        });
+        
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+        
+        window.togglePassword = togglePassword;
+    });
+</script>
+{% endblock %}
