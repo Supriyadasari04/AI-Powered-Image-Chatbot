@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Chat History</h3>
+            <button id="newChatBtn" class="btn new-chat-btn">+ New Chat</button>
+        </div>
+        <div class="conversation-list" id="conversationList">
+            <!-- Conversations will be added here dynamically -->
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2>Image Chat</h2>
+        <div class="upload-section">
+            <input type="file" id="imageUpload" accept="image/*">
+            <button onclick="uploadImage()" class="btn">Upload Image</button>
+            <div id="uploadStatus"></div>
+        </div>
+        
+        <div id="imagePreview" style="display:none;">
+            <img id="previewImage" src="" alt="Uploaded Image">
+            <div id="imageDescription"></div>
+        </div>
+        
+        <div id="chatSection" style="display:none;">
+            <div id="chatHistory"></div>
+            <div class="input-group">
+                <input type="text" id="questionInput" placeholder="Ask something about the image...">
+                <button onclick="askQuestion()" class="btn">Ask</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global variables
+    let currentImageUrl = null;
+    let currentConversationId = null;
+    let conversations = {};
+    
+    // Initialize a new chat
+    function initNewChat() {
+        currentConversationId = Date.now();
+        conversations[currentConversationId] = {
+            title: "New Chat",
+            messages: [],
+            imageUrl: null,
+            imageDescription: null
+        };
+        
+        // Reset UI
+        resetChatUI();
+        
+        // Create sidebar item
+        createConversationItem(currentConversationId);
+        
+        return currentConversationId;
+    }
+    
+    // Reset chat UI elements
+    function resetChatUI() {
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('chatSection').style.display = 'none';
+        document.getElementById('chatHistory').innerHTML = '';
+        document.getElementById('imageUpload').value = '';
+        document.getElementById('previewImage').src = '';
+        document.getElementById('imageDescription').innerHTML = '';
+        document.getElementById('uploadStatus').textContent = '';
+    }
+    
+    // Create conversation item in sidebar
+    function createConversationItem(conversationId) {
+        const conversationList = document.getElementById('conversationList');
+        const conversation = conversations[conversationId];
+        
+        const conversationItem = document.createElement('div');
+        conversationItem.className = 'conversation-item';
+        conversationItem.dataset.id = conversationId;
+        // In the createConversationItem function, update the dropdown content:
+        conversationItem.innerHTML = `
+            <span class="conversation-title">${conversation.title}</span>
+            <div class="conversation-actions">
+                <div class="dropdown">
+                    <button class="dropdown-btn">⋮</button>
+                    <div class="dropdown-content">
+                        <a href="#" class="rename-conversation">Rename</a>
+                        <a href="#" class="delete-conversation">Delete</a>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add click handler to select conversation
+        conversationItem.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown') && !e.target.closest('.dropdown-content')) {
+                selectConversation(conversationId);
+            }
+        });
+        
+        // Add to top of list
+        conversationList.insertBefore(conversationItem, conversationList.firstChild);
+        
+        // Setup dropdown actions
+        setupConversationActions(conversationItem);
+    }
+    
+    // Select a conversation to view
+    function selectConversation(conversationId) {
+        currentConversationId = conversationId;
+        const conversation = conversations[conversationId];
+        
+        // Reset UI first
+        resetChatUI();
+        
+        // Load conversation data
+        if (conversation.imageUrl) {
+            currentImageUrl = conversation.imageUrl;
+            document.getElementById('previewImage').src = currentImageUrl;
+            document.getElementById('imageDescription').innerHTML = 
+                `<p><strong>Description:</strong> ${conversation.imageDescription}</p>`;
+            document.getElementById('imagePreview').style.display = 'block';
+        }
+        
+        // Load messages
+        if (conversation.messages.length > 0) {
+            const chatHistory = document.getElementById('chatHistory');
+            conversation.messages.forEach(msg => {
+                chatHistory.innerHTML += 
+                    `<div class="${msg.role}-message">${msg.content}</div>`;
+            });
+            document.getElementById('chatSection').style.display = 'block';
+        }
+    }
+    
+    // Generate title from content
+    function generateTitle(content) {
+        // Try to get the first sentence or first few meaningful words
+        const firstSentence = content.split('.')[0] || content;
+        const meaningfulWords = firstSentence.split(' ').slice(0, 5).join(' ');
+        return meaningfulWords.length > 30 
+            ? meaningfulWords.substring(0, 30) + '...' 
+            : meaningfulWords;
+    }
+    
+    // Update conversation title
+    function updateConversationTitle(conversationId, newTitle) {
+        const conversation = conversations[conversationId];
+        if (conversation) {
+            conversation.title = newTitle;
+            const item = document.querySelector(`.conversation-item[data-id="${conversationId}"]`);
+            if (item) {
+                item.querySelector('.conversation-title').textContent = newTitle;
+            }
+        }
+    }
+    
+    function setupConversationActions(item) {
+        const dropdownBtn = item.querySelector('.dropdown-btn');
+        const dropdownContent = item.querySelector('.dropdown-content');
+        const conversationId = item.dataset.id;
+        
+        // Toggle dropdown visibility
+        dropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+        });
+        
+        // Rename conversation
+        item.querySelector('.rename-conversation').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropdownContent.style.display = 'none';
+            
+            const currentTitle = conversations[conversationId].title;
+            const newTitle = prompt("Rename conversation:", currentTitle);
+            
+            if (newTitle && newTitle !== currentTitle) {
+                updateConversationTitle(conversationId, newTitle);
+            }
+        });
+        
+        // Delete conversation
+        item.querySelector('.delete-conversation').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropdownContent.style.display = 'none';
+            
+            if (confirm('Delete this conversation?')) {
+                delete conversations[conversationId];
+                item.remove();
+                if (conversationId === currentConversationId.toString()) {
+                    initNewChat();
+                }
+            }
+        });
+        
+        // Close dropdown when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!item.contains(e.target)) {
+                dropdownContent.style.display = 'none';
+            }
+        });
+    }
+    
+    // Upload image function
+    async function uploadImage() {
+        const fileInput = document.getElementById('imageUpload');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            showStatus('Please select an image first', true);
+            return;
+        }
+        
+        // Initialize new conversation if needed
+        if (!currentConversationId) {
+            initNewChat();
+        }
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        showStatus('Uploading...');
+        
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            showStatus('Upload successful!');
+            
+            // Update current conversation
+            currentImageUrl = data.image_url;
+            conversations[currentConversationId].imageUrl = currentImageUrl;
+            conversations[currentConversationId].imageDescription = data.description;
+            
+            // Update UI
+            document.getElementById('previewImage').src = currentImageUrl;
+            document.getElementById('imageDescription').innerHTML = 
+                `<p><strong>Description:</strong> ${data.description}</p>`;
+            document.getElementById('imagePreview').style.display = 'block';
+            document.getElementById('chatSection').style.display = 'block';
+            
+            // Add initial message
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.innerHTML = `<div class="assistant-message">${data.description}</div>`;
+            conversations[currentConversationId].messages.push({
+                role: 'assistant',
+                content: data.description
+            });
+            
+            // Generate and update title
+            const title = generateTitle(data.description);
+            updateConversationTitle(currentConversationId, title);
+                
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, true);
+            console.error('Upload error:', error);
+        }
+    }
+    
+    // Ask question function
+    async function askQuestion() {
+        const questionInput = document.getElementById('questionInput');
+        const question = questionInput.value.trim();
+        
+        if (!question) {
+            showStatus('Please enter a question', true);
+            return;
+        }
+        
+        if (!currentImageUrl) {
+            showStatus('Please upload an image first', true);
+            return;
+        }
+        
+        // Add user question to chat
+        const chatHistory = document.getElementById('chatHistory');
+        chatHistory.innerHTML += `<div class="user-message">${question}</div>`;
+        conversations[currentConversationId].messages.push({
+            role: 'user',
+            content: question
+        });
+        
+        questionInput.value = '';
+        
+        try {
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    question: question,
+                    image_path: currentImageUrl
+                })
+            });
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Add assistant response
+            chatHistory.innerHTML += `<div class="assistant-message">${data.answer}</div>`;
+            conversations[currentConversationId].messages.push({
+                role: 'assistant',
+                content: data.answer
+            });
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            
+            // Update title if it's still the default
+            if (conversations[currentConversationId].title === "New Chat") {
+                const title = generateTitle(question);
+                updateConversationTitle(currentConversationId, title);
+            }
+            
+        } catch (error) {
+            showStatus(`Error: ${error.message}`, true);
+            console.error('Question error:', error);
+        }
+    }
+    
+    // Show status message
+    function showStatus(message, isError = false) {
+        const statusDiv = document.getElementById('uploadStatus');
+        statusDiv.textContent = message;
+        statusDiv.className = isError ? 'error' : 'success';
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Close dropdowns when clicking elsewhere
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                dropdown.style.display = 'none';
+            });
+        });
+        
+        // New chat button handler
+        document.getElementById('newChatBtn').addEventListener('click', initNewChat);
+        
+        // Start first conversation
+        initNewChat();
+    });
+</script>
+{% endblock %}
