@@ -14,7 +14,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" id="mainContent" style="display: none;">
         <h2>Image Chat</h2>
         <div class="upload-section">
             <input type="file" id="imageUpload" accept="image/*">
@@ -22,10 +22,9 @@
             <div id="uploadStatus"></div>
         </div>
         
-        <div id="imagePreview" style="display:none;">
-            <img id="previewImage" src="" alt="Uploaded Image">
-            <div id="imageDescription"></div>
-        </div>
+        <div id="imagePreview" style="display:none; text-align: center;">
+            <img id="previewImage" src="" alt="Uploaded Image" style="max-width: 90%; max-height: 400px; border-radius: 8px; margin: 0 auto;">
+            <div id="imageDescription" style="margin: 20px auto;"></div></div>
         
         <div id="chatSection" style="display:none;">
             <div id="chatHistory"></div>
@@ -34,6 +33,11 @@
                 <button onclick="askQuestion()" class="btn">Ask</button>
             </div>
         </div>
+    </div>
+    <!-- Empty state -->
+    <div id="emptyState" class="empty-state">
+        <h2>Welcome to Image Chat</h2>
+        <p>Click "+ New Chat" to start a conversation</p>
     </div>
 </div>
 
@@ -52,7 +56,9 @@
             imageUrl: null,
             imageDescription: null
         };
-        
+        // Show main content and hide empty state
+        document.getElementById('mainContent').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'none';
         // Reset UI
         resetChatUI();
         
@@ -209,66 +215,79 @@
     
     // Upload image function
     async function uploadImage() {
-        const fileInput = document.getElementById('imageUpload');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            showStatus('Please select an image first', true);
-            return;
-        }
-        
-        // Initialize new conversation if needed
-        if (!currentConversationId) {
-            initNewChat();
-        }
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        
-        showStatus('Uploading...');
-        
-        try {
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            
-            showStatus('Upload successful!');
-            
-            // Update current conversation
-            currentImageUrl = data.image_url;
-            conversations[currentConversationId].imageUrl = currentImageUrl;
-            conversations[currentConversationId].imageDescription = data.description;
-            
-            // Update UI
-            document.getElementById('previewImage').src = currentImageUrl;
-            document.getElementById('imageDescription').innerHTML = 
-                `<p><strong>Description:</strong> ${data.description}</p>`;
-            document.getElementById('imagePreview').style.display = 'block';
-            document.getElementById('chatSection').style.display = 'block';
-            
-            // Add initial message
-            const chatHistory = document.getElementById('chatHistory');
-            chatHistory.innerHTML = `<div class="assistant-message">${data.description}</div>`;
-            conversations[currentConversationId].messages.push({
-                role: 'assistant',
-                content: data.description
-            });
-            
-            // Generate and update title
-            const title = generateTitle(data.description);
-            updateConversationTitle(currentConversationId, title);
-                
-        } catch (error) {
-            showStatus(`Error: ${error.message}`, true);
-            console.error('Upload error:', error);
-        }
+    const fileInput = document.getElementById('imageUpload');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showStatus('Please select an image first', true);
+        return;
     }
+    
+    // Initialize new conversation if needed
+    if (!currentConversationId) {
+        initNewChat();
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    showStatus('Uploading...');
+    
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        showStatus('Upload successful!');
+        
+        // Update current conversation
+        currentImageUrl = data.image_url;
+        conversations[currentConversationId].imageUrl = currentImageUrl;
+        conversations[currentConversationId].imageDescription = data.description;
+        
+        // Update UI
+        document.getElementById('previewImage').src = currentImageUrl;
+        
+        // Format the description with HTML tags
+        let formattedDescription = data.description
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+            .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+            .replace(/\n\n/g, '</p><p>') // Paragraphs
+            .replace(/\n/g, '<br>') // Line breaks
+            .replace(/### (.*?)\n/g, '<h3>$1</h3>') // Headings
+            .replace(/## (.*?)\n/g, '<h4>$1</h4>') // Subheadings
+            .replace(/- (.*?)(\n|$)/g, '<li>$1</li>') // Bullet points
+            .replace(/`(.*?)`/g, '<span class="highlight">$1</span>'); // Highlight
+        
+        // Wrap in proper HTML structure
+        formattedDescription = `
+            <div class="description-content">
+                <p>${formattedDescription}</p>
+            </div>
+        `;
+        
+        document.getElementById('imageDescription').innerHTML = formattedDescription;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('chatSection').style.display = 'block';
+        
+        // Don't add the description to chat history
+        conversations[currentConversationId].messages = [];
+        
+        // Generate and update title
+        const title = generateTitle(data.description);
+        updateConversationTitle(currentConversationId, title);
+            
+    } catch (error) {
+        showStatus(`Error: ${error.message}`, true);
+        console.error('Upload error:', error);
+    }
+}
     
     // Ask question function
     async function askQuestion() {
@@ -350,9 +369,9 @@
         
         // New chat button handler
         document.getElementById('newChatBtn').addEventListener('click', initNewChat);
-        
-        // Start first conversation
-        initNewChat();
+        // Hide main content and show empty state initially
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
     });
 </script>
 {% endblock %}

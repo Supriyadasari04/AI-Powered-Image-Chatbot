@@ -323,7 +323,81 @@ nav a:hover {
 .delete-conversation {
     color: #dc3545 !important;
 }
+/* Empty State Styles */
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+}
 
-/* Your existing styles remain the same */
+.empty-state h2 {
+    color: #666;
+    margin-bottom: 1rem;
+}
 
-/* Your existing styles remain the same */
+.empty-state p {
+    color: #999;
+    font-size: 1.1rem;
+}
+#imageDescription {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px auto;
+    border: 1px solid #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    max-width: 90%;
+    width: fit-content;
+    text-align: left;
+}
+
+#imageDescription p {
+    margin: 12px 0;
+    padding: 0;
+}
+
+#imageDescription strong {
+    color: #4285F4;
+    font-weight: 600;
+}
+
+#imageDescription em {
+    font-style: italic;
+    color: #5f6368;
+}
+
+#imageDescription ul, #imageDescription ol {
+    margin: 10px 0 10px 20px;
+    padding-left: 15px;
+}
+
+#imageDescription li {
+    margin-bottom: 8px;
+}
+
+#imageDescription h3, #imageDescription h4 {
+    color: #202124;
+    margin: 15px 0 10px 0;
+}
+
+#imageDescription h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+#imageDescription h4 {
+    font-size: 1em;
+    font-weight: 500;
+}
+
+#imageDescription .highlight {
+    background-color: #f0f6ff;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
