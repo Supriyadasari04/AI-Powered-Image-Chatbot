@@ -2,318 +2,195 @@
 
 {% block content %}
 <div class="app-container">
-    <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <h3>Chat History</h3>
-            <button id="newChatBtn" class="btn new-chat-btn">+ New Chat</button>
+            <h3>Your Chats</h3>
+            <button id="newChatBtn" class="btn primary-btn">
+                <span>+</span> New Chat
+            </button>
         </div>
-        <div class="conversation-list" id="conversationList">
-            <!-- Conversations will be added here dynamically -->
+        <div class="chat-list" id="chatList">
+            <!-- Chats will be loaded here -->
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content" id="mainContent" style="display: none;">
-        <h2>Image Chat</h2>
-        <div class="upload-section">
-            <input type="file" id="imageUpload" accept="image/*">
-            <button onclick="uploadImage()" class="btn">Upload Image</button>
-            <div id="uploadStatus"></div>
+    <div class="main-content" id="mainContent">
+        <div class="empty-state" id="emptyState">
+            <img src="/static/empty-chat.png" alt="No chat selected" class="empty-img">
+            <h2>No Chat Selected</h2>
+            <p>Select a chat from the sidebar or create a new one</p>
         </div>
-        
-        <div id="imagePreview" style="display:none; text-align: center;">
-            <img id="previewImage" src="" alt="Uploaded Image" style="max-width: 90%; max-height: 400px; border-radius: 8px; margin: 0 auto;">
-            <div id="imageDescription" style="margin: 20px auto;"></div></div>
-        
-        <div id="chatSection" style="display:none;">
-            <div id="chatHistory"></div>
-            <div class="input-group">
-                <input type="text" id="questionInput" placeholder="Ask something about the image...">
-                <button onclick="askQuestion()" class="btn">Ask</button>
+
+        <div class="chat-container" id="chatContainer" style="display: none;">
+            <div class="image-section">
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImage" src="" alt="Uploaded image">
+                </div>
+                <div class="image-description" id="imageDescription"></div>
+            </div>
+
+            <div class="chat-section">
+                <div class="chat-history" id="chatHistory"></div>
+                <div class="input-area">
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    <div class="input-group">
+                        <input type="text" id="questionInput" placeholder="Ask about the image...">
+                        <button id="askBtn" class="btn primary-btn">Ask</button>
+                    </div>
+                    <button id="uploadBtn" class="btn secondary-btn">Upload New Image</button>
+                </div>
             </div>
         </div>
-    </div>
-    <!-- Empty state -->
-    <div id="emptyState" class="empty-state">
-        <h2>Welcome to Image Chat</h2>
-        <p>Click "+ New Chat" to start a conversation</p>
     </div>
 </div>
 
 <script>
-    // Global variables
+    let currentChatId = null;
     let currentImageUrl = null;
-    let currentConversationId = null;
-    let conversations = {};
-    
-    // Initialize a new chat
-    function initNewChat() {
-        currentConversationId = Date.now();
-        conversations[currentConversationId] = {
-            title: "New Chat",
-            messages: [],
-            imageUrl: null,
-            imageDescription: null
-        };
-        // Show main content and hide empty state
-        document.getElementById('mainContent').style.display = 'block';
-        document.getElementById('emptyState').style.display = 'none';
-        // Reset UI
-        resetChatUI();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadChats();
         
-        // Create sidebar item
-        createConversationItem(currentConversationId);
-        
-        return currentConversationId;
-    }
-    
-    // Reset chat UI elements
-    function resetChatUI() {
-        document.getElementById('imagePreview').style.display = 'none';
-        document.getElementById('chatSection').style.display = 'none';
-        document.getElementById('chatHistory').innerHTML = '';
-        document.getElementById('imageUpload').value = '';
-        document.getElementById('previewImage').src = '';
-        document.getElementById('imageDescription').innerHTML = '';
-        document.getElementById('uploadStatus').textContent = '';
-    }
-    
-    // Create conversation item in sidebar
-    function createConversationItem(conversationId) {
-        const conversationList = document.getElementById('conversationList');
-        const conversation = conversations[conversationId];
-        
-        const conversationItem = document.createElement('div');
-        conversationItem.className = 'conversation-item';
-        conversationItem.dataset.id = conversationId;
-        // In the createConversationItem function, update the dropdown content:
-        conversationItem.innerHTML = `
-            <span class="conversation-title">${conversation.title}</span>
-            <div class="conversation-actions">
-                <div class="dropdown">
-                    <button class="dropdown-btn">⋮</button>
-                    <div class="dropdown-content">
-                        <a href="#" class="rename-conversation">Rename</a>
-                        <a href="#" class="delete-conversation">Delete</a>
+        document.getElementById('newChatBtn').addEventListener('click', () => {
+            document.getElementById('imageUpload').click();
+        });
+
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            document.getElementById('imageUpload').click();
+        });
+
+        document.getElementById('imageUpload').addEventListener('change', uploadImage);
+        document.getElementById('askBtn').addEventListener('click', askQuestion);
+        document.getElementById('questionInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') askQuestion();
+        });
+    });
+
+    async function loadChats() {
+        try {
+            const response = await fetch('/chats');
+            const chats = await response.json();
+            const chatList = document.getElementById('chatList');
+            chatList.innerHTML = '';
+
+            if (chats.length === 0) {
+                chatList.innerHTML = '<p class="no-chats">No chats yet</p>';
+                return;
+            }
+
+            chats.forEach(chat => {
+                const chatElement = document.createElement('div');
+                chatElement.className = 'chat-item';
+                chatElement.dataset.id = chat.id;
+                chatElement.innerHTML = `
+                    <img src="${chat.image_url}" alt="Chat image" class="chat-image">
+                    <div class="chat-info">
+                        <h4 class="chat-title">${chat.title}</h4>
+                        <p class="chat-date">${new Date(chat.created_at).toLocaleString()}</p>
                     </div>
-                </div>
-            </div>
-        `;
-        
-        // Add click handler to select conversation
-        conversationItem.addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown') && !e.target.closest('.dropdown-content')) {
-                selectConversation(conversationId);
-            }
-        });
-        
-        // Add to top of list
-        conversationList.insertBefore(conversationItem, conversationList.firstChild);
-        
-        // Setup dropdown actions
-        setupConversationActions(conversationItem);
-    }
-    
-    // Select a conversation to view
-    function selectConversation(conversationId) {
-        currentConversationId = conversationId;
-        const conversation = conversations[conversationId];
-        
-        // Reset UI first
-        resetChatUI();
-        
-        // Load conversation data
-        if (conversation.imageUrl) {
-            currentImageUrl = conversation.imageUrl;
-            document.getElementById('previewImage').src = currentImageUrl;
-            document.getElementById('imageDescription').innerHTML = 
-                `<p><strong>Description:</strong> ${conversation.imageDescription}</p>`;
-            document.getElementById('imagePreview').style.display = 'block';
-        }
-        
-        // Load messages
-        if (conversation.messages.length > 0) {
-            const chatHistory = document.getElementById('chatHistory');
-            conversation.messages.forEach(msg => {
-                chatHistory.innerHTML += 
-                    `<div class="${msg.role}-message">${msg.content}</div>`;
+                `;
+                chatElement.addEventListener('click', () => loadChat(chat.id));
+                chatList.appendChild(chatElement);
             });
-            document.getElementById('chatSection').style.display = 'block';
+        } catch (error) {
+            console.error('Error loading chats:', error);
         }
     }
-    
-    // Generate title from content
-    function generateTitle(content) {
-        // Try to get the first sentence or first few meaningful words
-        const firstSentence = content.split('.')[0] || content;
-        const meaningfulWords = firstSentence.split(' ').slice(0, 5).join(' ');
-        return meaningfulWords.length > 30 
-            ? meaningfulWords.substring(0, 30) + '...' 
-            : meaningfulWords;
-    }
-    
-    // Update conversation title
-    function updateConversationTitle(conversationId, newTitle) {
-        const conversation = conversations[conversationId];
-        if (conversation) {
-            conversation.title = newTitle;
-            const item = document.querySelector(`.conversation-item[data-id="${conversationId}"]`);
-            if (item) {
-                item.querySelector('.conversation-title').textContent = newTitle;
+
+    async function loadChat(chatId) {
+        try {
+            const response = await fetch(`/chat/${chatId}`);
+            const chat = await response.json();
+            
+            if (chat.error) {
+                throw new Error(chat.error);
             }
-        }
-    }
-    
-    function setupConversationActions(item) {
-        const dropdownBtn = item.querySelector('.dropdown-btn');
-        const dropdownContent = item.querySelector('.dropdown-content');
-        const conversationId = item.dataset.id;
-        
-        // Toggle dropdown visibility
-        dropdownBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-        });
-        
-        // Rename conversation
-        item.querySelector('.rename-conversation').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropdownContent.style.display = 'none';
+
+            currentChatId = chat.id;
+            currentImageUrl = chat.image_url;
+
+            // Show chat container and hide empty state
+            document.getElementById('chatContainer').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+
+            // Load image and description
+            document.getElementById('previewImage').src = currentImageUrl;
             
-            const currentTitle = conversations[conversationId].title;
-            const newTitle = prompt("Rename conversation:", currentTitle);
+            // Find the first assistant message (description)
+            const description = chat.messages.find(m => m.role === 'assistant')?.content || '';
+            document.getElementById('imageDescription').innerHTML = marked.parse(description);
+
+            // Load messages
+            const chatHistory = document.getElementById('chatHistory');
+            chatHistory.innerHTML = '';
             
-            if (newTitle && newTitle !== currentTitle) {
-                updateConversationTitle(conversationId, newTitle);
-            }
-        });
-        
-        // Delete conversation
-        item.querySelector('.delete-conversation').addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropdownContent.style.display = 'none';
-            
-            if (confirm('Delete this conversation?')) {
-                delete conversations[conversationId];
-                item.remove();
-                if (conversationId === currentConversationId.toString()) {
-                    initNewChat();
+            chat.messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    chatHistory.innerHTML += `
+                        <div class="message user-message">
+                            <div class="message-content">${marked.parse(msg.content)}</div>
+                        </div>
+                    `;
+                } else if (msg.role === 'assistant' && msg.content !== description) {
+                    chatHistory.innerHTML += `
+                        <div class="message bot-message">
+                            <div class="message-content">${marked.parse(msg.content)}</div>
+                        </div>
+                    `;
                 }
-            }
-        });
-        
-        // Close dropdown when clicking elsewhere
-        document.addEventListener('click', (e) => {
-            if (!item.contains(e.target)) {
-                dropdownContent.style.display = 'none';
-            }
-        });
-    }
-    
-    // Upload image function
-    async function uploadImage() {
-    const fileInput = document.getElementById('imageUpload');
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        showStatus('Please select an image first', true);
-        return;
-    }
-    
-    // Initialize new conversation if needed
-    if (!currentConversationId) {
-        initNewChat();
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    showStatus('Uploading...');
-    
-    try {
-        const response = await fetch('/upload', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error);
+            });
+
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        } catch (error) {
+            console.error('Error loading chat:', error);
+            alert('Failed to load chat');
         }
+    }
+
+    async function uploadImage() {
+        const fileInput = document.getElementById('imageUpload');
+        const file = fileInput.files[0];
         
-        showStatus('Upload successful!');
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            await loadChat(data.chat_id);
+            await loadChats();
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload image');
+        }
+    }
+
+    async function askQuestion() {
+        const input = document.getElementById('questionInput');
+        const question = input.value.trim();
         
-        // Update current conversation
-        currentImageUrl = data.image_url;
-        conversations[currentConversationId].imageUrl = currentImageUrl;
-        conversations[currentConversationId].imageDescription = data.description;
-        
-        // Update UI
-        document.getElementById('previewImage').src = currentImageUrl;
-        
-        // Format the description with HTML tags
-        let formattedDescription = data.description
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-            .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-            .replace(/\n\n/g, '</p><p>') // Paragraphs
-            .replace(/\n/g, '<br>') // Line breaks
-            .replace(/### (.*?)\n/g, '<h3>$1</h3>') // Headings
-            .replace(/## (.*?)\n/g, '<h4>$1</h4>') // Subheadings
-            .replace(/- (.*?)(\n|$)/g, '<li>$1</li>') // Bullet points
-            .replace(/`(.*?)`/g, '<span class="highlight">$1</span>'); // Highlight
-        
-        // Wrap in proper HTML structure
-        formattedDescription = `
-            <div class="description-content">
-                <p>${formattedDescription}</p>
+        if (!question || !currentChatId) return;
+
+        // Add user message immediately
+        const chatHistory = document.getElementById('chatHistory');
+        chatHistory.innerHTML += `
+            <div class="message user-message">
+                <div class="message-content">${marked.parse(question)}</div>
             </div>
         `;
-        
-        document.getElementById('imageDescription').innerHTML = formattedDescription;
-        document.getElementById('imagePreview').style.display = 'block';
-        document.getElementById('chatSection').style.display = 'block';
-        
-        // Don't add the description to chat history
-        conversations[currentConversationId].messages = [];
-        
-        // Generate and update title
-        const title = generateTitle(data.description);
-        updateConversationTitle(currentConversationId, title);
-            
-    } catch (error) {
-        showStatus(`Error: ${error.message}`, true);
-        console.error('Upload error:', error);
-    }
-}
-    
-    // Ask question function
-    async function askQuestion() {
-        const questionInput = document.getElementById('questionInput');
-        const question = questionInput.value.trim();
-        
-        if (!question) {
-            showStatus('Please enter a question', true);
-            return;
-        }
-        
-        if (!currentImageUrl) {
-            showStatus('Please upload an image first', true);
-            return;
-        }
-        
-        // Add user question to chat
-        const chatHistory = document.getElementById('chatHistory');
-        chatHistory.innerHTML += `<div class="user-message">${question}</div>`;
-        conversations[currentConversationId].messages.push({
-            role: 'user',
-            content: question
-        });
-        
-        questionInput.value = '';
-        
+        input.value = '';
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
         try {
             const response = await fetch('/ask', {
                 method: 'POST',
@@ -321,57 +198,32 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    question: question,
-                    image_path: currentImageUrl
+                    chat_id: currentChatId,
+                    question: question
                 })
             });
             const data = await response.json();
-            
+
             if (data.error) {
                 throw new Error(data.error);
             }
-            
-            // Add assistant response
-            chatHistory.innerHTML += `<div class="assistant-message">${data.answer}</div>`;
-            conversations[currentConversationId].messages.push({
-                role: 'assistant',
-                content: data.answer
-            });
+
+            // Add bot response
+            chatHistory.innerHTML += `
+                <div class="message bot-message">
+                    <div class="message-content">${marked.parse(data.answer)}</div>
+                </div>
+            `;
             chatHistory.scrollTop = chatHistory.scrollHeight;
-            
-            // Update title if it's still the default
-            if (conversations[currentConversationId].title === "New Chat") {
-                const title = generateTitle(question);
-                updateConversationTitle(currentConversationId, title);
-            }
-            
+            await loadChats(); // Refresh chat list
         } catch (error) {
-            showStatus(`Error: ${error.message}`, true);
-            console.error('Question error:', error);
+            console.error('Error asking question:', error);
+            chatHistory.innerHTML += `
+                <div class="message error-message">
+                    <div class="message-content">Error: ${error.message}</div>
+                </div>
+            `;
         }
     }
-    
-    // Show status message
-    function showStatus(message, isError = false) {
-        const statusDiv = document.getElementById('uploadStatus');
-        statusDiv.textContent = message;
-        statusDiv.className = isError ? 'error' : 'success';
-    }
-    
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        // Close dropdowns when clicking elsewhere
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-                dropdown.style.display = 'none';
-            });
-        });
-        
-        // New chat button handler
-        document.getElementById('newChatBtn').addEventListener('click', initNewChat);
-        // Hide main content and show empty state initially
-        document.getElementById('mainContent').style.display = 'none';
-        document.getElementById('emptyState').style.display = 'block';
-    });
 </script>
 {% endblock %}

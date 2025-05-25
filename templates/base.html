@@ -1,31 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Image Chat App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Chat</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <nav>
-        {% if current_user.is_authenticated %}
-            <span>Welcome, {{ current_user.name }}!</span>
-            <a href="{{ url_for('home') }}">Home</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
-        {% else %}
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('signup') }}">Sign Up</a>
-        {% endif %}
+        <div class="nav-container">
+            <span class="logo">ImageChat</span>
+            <div class="nav-links">
+                {% if current_user.is_authenticated %}
+                    <span class="welcome">Hi, {{ current_user.name }}!</span>
+                    <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                    <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
     </nav>
-    
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="flash-messages">
+
+    <div class="flash-container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
                 {% for message in messages %}
                     <div class="flash">{{ message }}</div>
                 {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-    
-    {% block content %}{% endblock %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </body>
 </html>

@@ -1,20 +1,19 @@
+import os
+from datetime import datetime
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 import google.generativeai as genai
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from PIL import Image
-import os
-from dotenv import load_dotenv
 import io
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-
-# Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -22,7 +21,6 @@ app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB limit
 
-# Initialize extensions
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
@@ -31,44 +29,34 @@ login_manager.login_view = 'login'
 genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# Conversation context
-conversation_history = []
+# Database Models
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100))
+    name = db.Column(db.String(100))
+    chats = db.relationship('Chat', backref='user', lazy=True)
 
-# User loader
+class Chat(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200))
+    image_path = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    messages = db.relationship('Message', backref='chat', lazy=True, cascade='all, delete-orphan')
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text)
+    role = db.Column(db.String(20))  # 'user' or 'assistant'
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-from flask_login import UserMixin
-
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    username = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-
-    # These are required by Flask-Login
-    @property
-    def is_active(self):
-        return True  # All users are active in this implementation
-
-    @property
-    def is_authenticated(self):
-        return True  # Return True if user is authenticated
-
-    @property
-    def is_anonymous(self):
-        return False  # Return False for regular users
-
-    def get_id(self):
-        return str(self.id)  # Return the user ID as unicode
-
-    def __repr__(self):
-        return f'<User {self.username}>'
-
-
-
-# Helper functions
+# Helper Functions
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
@@ -80,93 +68,65 @@ def process_image(image_path):
         img.save(img_byte_arr, format='PNG')
         img_byte_arr = img_byte_arr.getvalue()
         
-        response = model.generate_content(
-            [
-                "Describe this image in detail, including objects, colors, text, and context.",
-                {"mime_type": "image/png", "data": img_byte_arr}
-            ],
-            request_options={'timeout': 10}
-        )
+        response = model.generate_content([
+            "Describe this image in detail, including objects, colors, text, and context.",
+            {"mime_type": "image/png", "data": img_byte_arr}
+        ])
         
-        if not response or not hasattr(response, 'text'):
-            return {"error": "Invalid response from Gemini API"}
-        
-        return {
-            "description": response.text,
-            "image_path": image_path
-        }
-        
+        return response.text
     except Exception as e:
-        return {"error": f"API error: {str(e)}"}
+        return f"Error processing image: {str(e)}"
 
 # Routes
 @app.route('/')
 @login_required
 def home():
-    return render_template('index.html', name=current_user.name)
+    return render_template('index.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-    
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        remember = True if request.form.get('remember') else False
-
         user = User.query.filter_by(username=username).first()
 
         if not user or not check_password_hash(user.password, password):
-            flash('Invalid username or password')
+            flash('Invalid credentials')
             return redirect(url_for('login'))
 
-        login_user(user, remember=remember)
+        login_user(user)
         return redirect(url_for('home'))
-    
+
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-    
+
     if request.method == 'POST':
-        name = request.form.get('name')
         username = request.form.get('username')
         password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-
-        # Password validation
-        if len(password) < 8:
-            flash('Password must be at least 8 characters')
-            return redirect(url_for('signup'))
-        if not any(char.isdigit() for char in password):
-            flash('Password must contain at least one number')
-            return redirect(url_for('signup'))
-        if not any(char.isupper() for char in password):
-            flash('Password must contain at least one uppercase letter')
-            return redirect(url_for('signup'))
-        if password != confirm_password:
-            flash('Passwords do not match')
-            return redirect(url_for('signup'))
+        name = request.form.get('name')
 
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
             return redirect(url_for('signup'))
 
         new_user = User(
-            name=name,
             username=username,
-            password=generate_password_hash(password, method='pbkdf2:sha256')
+            password=generate_password_hash(password),
+            name=name
         )
-
         db.session.add(new_user)
         db.session.commit()
 
-        flash('Account created successfully! Please log in.')
-        return redirect(url_for('login'))
-    
+        login_user(new_user)
+        return redirect(url_for('home'))
+
     return render_template('signup.html')
 
 @app.route('/logout')
@@ -185,82 +145,106 @@ def upload_file():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
     
-    if file and allowed_file(file.filename):
-        try:
-            filename = secure_filename(file.filename)
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(save_path)
-            
-            result = process_image(save_path)
-            
-            if 'error' in result:
-                return jsonify({"error": result['error']}), 500
-                
-            if 'description' not in result:
-                return jsonify({"error": "No description generated"}), 500
-            
-            global conversation_history
-            conversation_history = [
-                {"role": "assistant", "content": result['description']}
-            ]
-            
-            return jsonify({
-                "message": "Image uploaded successfully",
-                "description": result['description'],
-                "image_url": f"/static/uploads/{filename}"
-            })
-            
-        except Exception as e:
-            return jsonify({"error": f"Server error: {str(e)}"}), 500
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Invalid file type"}), 400
     
-    return jsonify({"error": "Invalid file type"}), 400
+    try:
+        filename = secure_filename(file.filename)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+        
+        description = process_image(save_path)
+        
+        chat = Chat(
+            title=f"Chat {datetime.now().strftime('%m/%d %H:%M')}",
+            image_path=f"/static/uploads/{filename}",
+            user_id=current_user.id
+        )
+        db.session.add(chat)
+        
+        message = Message(
+            content=description,
+            role='assistant',
+            chat=chat
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        return jsonify({
+            "chat_id": chat.id,
+            "image_url": chat.image_path,
+            "description": description
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/ask', methods=['POST'])
 @login_required
 def ask_question():
     data = request.json
+    chat_id = data.get('chat_id')
     question = data.get('question')
-    image_path = data.get('image_path')
     
-    if not question or not image_path:
-        return jsonify({"error": "Missing question or image path"}), 400
+    if not chat_id or not question:
+        return jsonify({"error": "Missing chat_id or question"}), 400
+    
+    chat = Chat.query.filter_by(id=chat_id, user_id=current_user.id).first()
+    if not chat:
+        return jsonify({"error": "Chat not found"}), 404
     
     try:
-        full_path = os.path.join('static/uploads', os.path.basename(image_path))
-        img = Image.open(full_path)
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='PNG')
-        img_data = img_byte_arr.getvalue()
-        
-        response = model.generate_content(
-            [
-                "Here's our conversation so far:\n" + 
-                "\n".join([f"{msg['role']}: {msg['content']}" for msg in conversation_history[-3:]]),
-                question,
-                {"mime_type": "image/png", "data": img_data}
-            ],
-            request_options={'timeout': 10}
-        )
+        response = model.generate_content([
+            "Context from previous messages:",
+            *[f"{msg.role}: {msg.content}" for msg in chat.messages],
+            f"User question: {question}",
+            {"mime_type": "image/png", "data": open(chat.image_path[1:], 'rb').read()}
+        ])
         
         answer = response.text
-        conversation_history.append({"role": "user", "content": question})
-        conversation_history.append({"role": "assistant", "content": answer})
         
-        return jsonify({
-            "status": "success",
-            "answer": answer,
-            "conversation": conversation_history
-        })
+        user_msg = Message(content=question, role='user', chat=chat)
+        bot_msg = Message(content=answer, role='assistant', chat=chat)
+        db.session.add_all([user_msg, bot_msg])
+        db.session.commit()
         
+        return jsonify({"answer": answer})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/chats')
+@login_required
+def get_chats():
+    chats = Chat.query.filter_by(user_id=current_user.id).order_by(Chat.created_at.desc()).all()
+    return jsonify([{
+        "id": chat.id,
+        "title": chat.title,
+        "image_url": chat.image_path,
+        "created_at": chat.created_at.isoformat()
+    } for chat in chats])
+
+@app.route('/chat/<int:chat_id>')
+@login_required
+def get_chat(chat_id):
+    chat = Chat.query.filter_by(id=chat_id, user_id=current_user.id).first()
+    if not chat:
+        return jsonify({"error": "Chat not found"}), 404
+    
+    return jsonify({
+        "id": chat.id,
+        "title": chat.title,
+        "image_url": chat.image_path,
+        "messages": [{
+            "role": msg.role,
+            "content": msg.content,
+            "timestamp": msg.timestamp.isoformat()
+        } for msg in chat.messages]
+    })
 
 # Initialize database
 with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True)

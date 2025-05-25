@@ -1,9 +1,7 @@
-# pip install flask-login flask-bcrypt
-# pip install flask flask-login flask-sqlalchemy google-generativeai pillow python-dotenv
 flask
 flask-login
-flask-bcrypt
 flask-sqlalchemy
 google-generativeai
-pillow 
+pillow
 python-dotenv
+werkzeug
