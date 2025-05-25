@@ -13,13 +13,11 @@
             <span class="logo">ImageChat</span>
             <div class="nav-links">
                 {% if current_user.is_authenticated %}
-                    <span class="welcome">
-                        Hi, <a href="{{ url_for('profile') }}" class="profile-link">{{ current_user.name }}</a>!
-                    </span>
                     <a href="{{ url_for('home') }}" class="nav-link">Home</a>
-                    <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
                     <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
                 {% else %}
+                    <a href="{{ url_for('landing') }}" class="nav-link">Home</a>
                     <a href="{{ url_for('login') }}" class="nav-link">Login</a>
                     <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
                 {% endif %}

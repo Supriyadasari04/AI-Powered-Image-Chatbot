@@ -77,15 +77,29 @@ def process_image(image_path):
         return f"Error processing image: {str(e)}"
 
 # Routes
+# Landing page (accessible to all)
+# Landing page or redirect to home
 @app.route('/')
+def root():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return redirect(url_for('landing'))
+
+# Landing page (public)
+@app.route('/landing')
+def landing():
+    return render_template('landing.html')
+
+# Main app (protected)
+@app.route('/home')
 @login_required
 def home():
     return render_template('index.html')
-
+# Login route
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))
+        return redirect(url_for('home'))  # Changed from 'home' to 'home'
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -97,14 +111,15 @@ def login():
             return redirect(url_for('login'))
 
         login_user(user)
-        return redirect(url_for('home'))
+        return redirect(url_for('home'))  # Changed from 'home' to 'home'
 
     return render_template('login.html')
 
+# Signup route
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))
+        return redirect(url_for('home'))  # Changed from 'home' to 'home'
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -141,7 +156,7 @@ def signup():
         db.session.commit()
 
         login_user(new_user)
-        return redirect(url_for('home'))
+        return redirect(url_for('home'))  # Changed from 'home' to 'home'
 
     return render_template('signup.html')
 

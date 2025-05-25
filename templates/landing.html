@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="landing-container">
+    <!-- Animated Hero Section -->
+    <section class="hero animate-on-scroll">
+        <div class="hero-content">
+            <h1 class="text-gradient">Conversational Image Recognition Chatbot</h1>
+            <p class="hero-subtitle typewriter">Transform images into conversations with AI</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('login') }}" class="btn primary-btn pulse">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn secondary-btn pulse">Sign Up</a>
+            </div>
+        </div>
+        <div class="hero-image floating">
+            <img src="/static/landing-hero.png" alt="AI Chatbot Interface">
+        </div>
+    </section>
+
+    <!-- Animated Features Section -->
+    <section class="features">
+        <h2 class="section-title animate-on-scroll">Powerful Features</h2>
+        <div class="features-grid">
+            <div class="feature-card animate-on-scroll" data-delay="0.1s">
+                <div class="feature-icon">🖼️</div>
+                <h3>Advanced Image Analysis</h3>
+                <p>Our AI doesn't just see images - it understands them. Get detailed descriptions of objects, colors, textures, and even emotions captured in your photos.</p>
+            </div>
+            <div class="feature-card animate-on-scroll" data-delay="0.2s">
+                <div class="feature-icon">💬</div>
+                <h3>Natural Conversations</h3>
+                <p>Ask anything about your images and receive human-like responses. "What's the breed of this dog?" or "Explain this graph" - our AI has you covered.</p>
+            </div>
+            <div class="feature-card animate-on-scroll" data-delay="0.3s">
+                <div class="feature-icon">📚</div>
+                <h3>Smart Chat History</h3>
+                <p>All your image conversations are automatically organized and searchable. Never lose important visual insights again.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo Section -->
+    <section class="demo">
+        <h2 class="section-title animate-on-scroll">See the Magic in Action</h2>
+        <div class="demo-container">
+            <div class="demo-text animate-on-scroll">
+                <h3>How It Works</h3>
+                <div class="step-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Upload Your Image</h4>
+                            <p>Drag & drop or select any image file (JPG, PNG, GIF)</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Get Instant Analysis</h4>
+                            <p>Our AI generates a comprehensive description automatically</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Ask Follow-up Questions</h4>
+                            <p>Have a conversation about your image like you would with a human expert</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="demo-buttons">
+                    <a href="{{ url_for('signup') }}" class="btn primary-btn pulse">Try It Free</a>
+                </div>
+            </div>
+            <div class="demo-gif animate-on-scroll" data-delay="0.2s">
+                <div class="gif-container">
+                    <img src="/static/demo-animation.gif" alt="Demo Animation">
+                    <div class="play-button">▶</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section class="tech-stack">
+        <h2 class="section-title animate-on-scroll">Powered By Cutting-Edge Technology</h2>
+        <div class="tech-grid animate-on-scroll">
+            <div class="tech-card">
+                <img src="/static/gemini-logo.png" alt="Gemini AI">
+                <h3>Google Gemini AI</h3>
+                <p>State-of-the-art multimodal understanding</p>
+            </div>
+            <div class="tech-card">
+                <img src="/static/flask-logo.png" alt="Flask">
+                <h3>Flask Framework</h3>
+                <p>Lightweight yet powerful backend</p>
+            </div>
+            <div class="tech-card">
+                <img src="/static/sqlite-logo.png" alt="SQLite">
+                <h3>SQLite Database</h3>
+                <p>Fast, reliable data storage</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Carousel -->
+    <section class="testimonials">
+        <h2 class="section-title animate-on-scroll">Trusted By Thousands</h2>
+        <div class="testimonial-carousel animate-on-scroll">
+            <div class="testimonial active">
+                <p>"This chatbot revolutionized how I study art history. It can analyze paintings and provide historical context better than some textbooks!"</p>
+                <div class="user-info">
+                    <img src="/static/user1.jpg" alt="User" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">- Emily Chen</div>
+                        <div class="user-title">Art History Student</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p>"As a journalist, I use this daily to quickly extract information from press photos and event images. Saves me hours of research!"</p>
+                <div class="user-info">
+                    <img src="/static/user2.jpg" alt="User" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">- Raj Patel</div>
+                        <div class="user-title">Investigative Reporter</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial">
+                <p>"My e-commerce store's customer service improved dramatically once we integrated this to answer product image questions automatically."</p>
+                <div class="user-info">
+                    <img src="/static/user3.jpg" alt="User" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">- Maria Gonzalez</div>
+                        <div class="user-title">E-commerce Owner</div>
+                    </div>
+                </div>
+            </div>
+            <div class="carousel-controls">
+                <button class="carousel-prev">❮</button>
+                <button class="carousel-next">❯</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing">
+        <h2 class="section-title animate-on-scroll">Simple, Transparent Pricing</h2>
+        <div class="pricing-cards animate-on-scroll">
+            <div class="pricing-card">
+                <h3>Free</h3>
+                <div class="price">$0<span>/month</span></div>
+                <ul>
+                    <li>✓ 10 image analyses per day</li>
+                    <li>✓ Basic image descriptions</li>
+                    <li>✓ 7-day chat history</li>
+                    <li>✗ Priority support</li>
+                </ul>
+                <a href="{{ url_for('signup') }}" class="btn secondary-btn">Get Started</a>
+            </div>
+            <div class="pricing-card featured">
+                <div class="popular-badge">Most Popular</div>
+                <h3>Pro</h3>
+                <div class="price">$9<span>/month</span></div>
+                <ul>
+                    <li>✓ 100 image analyses per day</li>
+                    <li>✓ Detailed expert-level analysis</li>
+                    <li>✓ 30-day chat history</li>
+                    <li>✓ Priority support</li>
+                </ul>
+                <a href="{{ url_for('signup') }}" class="btn primary-btn">Upgrade Now</a>
+            </div>
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">Custom</div>
+                <ul>
+                    <li>✓ Unlimited analyses</li>
+                    <li>✓ Custom AI models</li>
+                    <li>✓ Permanent chat history</li>
+                    <li>✓ Dedicated account manager</li>
+                </ul>
+                <a href="#contact" class="btn secondary-btn">Contact Sales</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA with Animation -->
+    <section class="final-cta animate-on-scroll">
+        <div class="cta-content">
+            <h2>Ready to Transform Your Images into Conversations?</h2>
+            <p>Join thousands of users seeing their visual content in a whole new way</p>
+            <div class="cta-buttons">
+                <a href="{{ url_for('signup') }}" class="btn primary-btn pulse large-btn">Start Free Trial</a>
+                <a href="#demo" class="btn secondary-btn large-btn">Watch Demo</a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- JavaScript for animations and interactions -->
+<script>
+    // Intersection Observer for scroll animations
+    const animateOnScroll = () => {
+        const elements = document.querySelectorAll('.animate-on-scroll');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const delay = entry.target.getAttribute('data-delay') || '0s';
+                    entry.target.style.animationDelay = delay;
+                    entry.target.classList.add('animated');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        elements.forEach(el => observer.observe(el));
+    };
+
+    // Typewriter effect
+    const typeWriter = () => {
+        const element = document.querySelector('.typewriter');
+        const text = element.textContent;
+        element.textContent = '';
+        let i = 0;
+        const typing = setInterval(() => {
+            if (i < text.length) {
+                element.textContent += text.charAt(i);
+                i++;
+            } else {
+                clearInterval(typing);
+            }
+        }, 50);
+    };
+
+    // Testimonial carousel
+    const initCarousel = () => {
+        const testimonials = document.querySelectorAll('.testimonial');
+        let current = 0;
+        
+        const showTestimonial = (index) => {
+            testimonials.forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+        };
+        
+        document.querySelector('.carousel-next').addEventListener('click', () => {
+            current = (current + 1) % testimonials.length;
+            showTestimonial(current);
+        });
+        
+        document.querySelector('.carousel-prev').addEventListener('click', () => {
+            current = (current - 1 + testimonials.length) % testimonials.length;
+            showTestimonial(current);
+        });
+        
+        // Auto-rotate every 5 seconds
+        setInterval(() => {
+            current = (current + 1) % testimonials.length;
+            showTestimonial(current);
+        }, 5000);
+    };
+
+    // Play button for demo GIF
+    const initDemoPlayer = () => {
+        const gifContainer = document.querySelector('.gif-container');
+        const playButton = document.querySelector('.play-button');
+        
+        playButton.addEventListener('click', () => {
+            gifContainer.classList.add('playing');
+            playButton.style.display = 'none';
+        });
+    };
+
+    // Initialize all effects when DOM loads
+    document.addEventListener('DOMContentLoaded', () => {
+        animateOnScroll();
+        typeWriter();
+        initCarousel();
+        initDemoPlayer();
+    });
+</script>
+{% endblock %}
