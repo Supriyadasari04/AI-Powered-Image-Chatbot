@@ -1433,4 +1433,16 @@ html {
     scroll-behavior: smooth;
     scroll-padding-top: 80px; /* Adjust based on your header height */
 }
+/* Floating Animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
 
+
+/* Add this to your existing button styles */
+.btn.floating:hover {
+    animation: float 1.5s ease-in-out infinite;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
