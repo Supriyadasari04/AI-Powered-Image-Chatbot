@@ -3,34 +3,60 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h2>Login</h2>
-        <form method="POST" action="{{ url_for('login') }}">
+        <div class="auth-header">
+            <h2>Welcome Back</h2>
+            <p>Login to continue to ImageChat</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form">
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" required placeholder="Enter your username">
+                <i class="fas fa-user input-icon"></i>
             </div>
+            
             <div class="form-group">
                 <label for="password">Password</label>
-                <div class="password-input">
-                    <input type="password" id="password" name="password" required>
-                    <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <i class="fas fa-lock input-icon"></i>
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
             </div>
-            <div class="form-group">
-                <label>
-                    <input type="checkbox" name="remember"> Remember me
+            
+            <div class="form-options">
+                <label class="checkbox-container">
+                    <input type="checkbox" name="remember">
+                    <span class="checkmark"></span>
+                    Remember me
                 </label>
+                <a href="#" class="forgot-password">Forgot password?</a>
             </div>
-            <button type="submit" class="btn primary-btn">Login</button>
+            
+            <button type="submit" class="btn auth-btn">
+                <span>Login</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
         </form>
-        <p class="auth-link">Don't have an account? <a href="{{ url_for('signup') }}">Sign up here</a></p>
+        
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('signup') }}" class="auth-link">Sign up here</a></p>
+        </div>
     </div>
 </div>
 
 <script>
-    function togglePassword(id) {
-        const input = document.getElementById(id);
-        input.type = input.type === 'password' ? 'text' : 'password';
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePassword = document.querySelector('.toggle-password');
+        const password = document.getElementById('password');
+        
+        togglePassword.addEventListener('click', function() {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    });
 </script>
 {% endblock %}
