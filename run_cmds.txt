@@ -1,13 +1,15 @@
 >git bash
     git clone <git repo link>
-    cd aadi
+    cd <file_name>
     code .
 
 delete instance folder
 
+remove everything from .gitignore and save
+
 create a ".env"file 
     enter : 
-    GEMINI_API_KEY=AIzaSyDnIlFHJsK8sOrX0fXYK_aBnhIl6E1q5Pk
+    GEMINI_API_KEY=<your_secret_key> "AIzaSyCNKpOaXedxN6UaJ0ozkbYoEtk0igp1440"
     SECRET_KEY=<your_secret_key>
 
 >powershell
