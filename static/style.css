@@ -103,6 +103,102 @@ nav {
     text-align: center;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+/* Button Base Styles */
+.btn {
+    text-decoration: none !important; /* Removes underline */
+    display: inline-block;
+    padding: 0.8rem 1.8rem;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Primary Button */
+.btn.primary-btn {
+    background-color: #4285F4;
+    color: white;
+    box-shadow: 0 2px 5px rgba(66, 133, 244, 0.3);
+}
+
+.btn.primary-btn:hover {
+    background-color: #3367d6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+}
+
+/* Secondary Button */
+.btn.secondary-btn {
+    background-color: white;
+    color: #4285F4;
+    border: 1px solid #4285F4;
+}
+
+.btn.secondary-btn:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+/* Large Buttons */
+.btn.large-btn {
+    padding: 1rem 2.2rem;
+    font-size: 1.1rem;
+}
+
+/* Pulse Animation */
+.btn.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Remove default link styles */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Focus states for accessibility */
+.btn:focus {
+    outline: 2px solid #4285F4;
+    outline-offset: 2px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .form-group {
     margin-bottom: 1.25rem;
 }
@@ -1250,26 +1346,31 @@ html {
 
 .social-links {
     display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    gap: 15px;
+    margin-top: 20px;
 }
 
 .social-links a {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: rgba(255, 255, 255, 0.1);
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    color: #fff;
-    transition: all 0.3s;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
 }
 
 .social-links a:hover {
-    background: #4285F4;
     transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
+
+/* Specific hover colors */
+.social-links a:hover i.fa-facebook-f { color: #1877f2 !important; }
+.social-links a:hover i.fa-twitter { color: #1da1f2 !important; }
+.social-links a:hover i.fa-instagram { color: #e4405f !important; }
+.social-links a:hover i.fa-linkedin-in { color: #0077b5 !important; }
 
 .footer-bottom {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -1319,3 +1420,17 @@ html {
         justify-content: center;
     }
 }
+html {
+    scroll-behavior: smooth;
+}
+/* Add this to your style.css */
+html {
+    scroll-behavior: smooth;
+}
+
+/* If you want custom scroll duration */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* Adjust based on your header height */
+}
+

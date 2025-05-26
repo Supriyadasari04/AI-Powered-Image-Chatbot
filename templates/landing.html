@@ -8,8 +8,8 @@
             <h1 class="text-gradient">Conversational Image Recognition Chatbot</h1>
             <p class="hero-subtitle typewriter">Transform images into conversations with AI</p>
             <div class="cta-buttons">
-                <a href="{{ url_for('login') }}" class="btn primary-btn pulse">Login</a>
-                <a href="{{ url_for('signup') }}" class="btn secondary-btn pulse">Sign Up</a>
+                <a href="{{ url_for('login') }}" class="btn primary-btn">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn secondary-btn">Sign Up</a>
             </div>
         </div>
         <div class="hero-image floating">
@@ -18,7 +18,7 @@
     </section>
 
     <!-- Animated Features Section -->
-    <section class="features">
+    <section id="features" class="features">
         <h2 class="section-title animate-on-scroll">Powerful Features</h2>
         <div class="features-grid">
             <div class="feature-card animate-on-scroll" data-delay="0.1s">
@@ -122,7 +122,7 @@
                 <div class="user-info">
                     <img src="/static/user2.jpg" alt="User" class="user-avatar">
                     <div class="user-details">
-                        <div class="user-name">- Raj Patel</div>
+                        <div class="user-name">- Arnav Singh</div>
                         <div class="user-title">Investigative Reporter</div>
                     </div>
                 </div>
@@ -132,7 +132,7 @@
                 <div class="user-info">
                     <img src="/static/user3.jpg" alt="User" class="user-avatar">
                     <div class="user-details">
-                        <div class="user-name">- Maria Gonzalez</div>
+                        <div class="user-name">- Dhruv Gupta</div>
                         <div class="user-title">E-commerce Owner</div>
                     </div>
                 </div>
@@ -145,7 +145,7 @@
     </section>
 
     <!-- Pricing Section -->
-    <section class="pricing">
+    <section id="pricing" class="pricing">
         <h2 class="section-title animate-on-scroll">Simple, Transparent Pricing</h2>
         <div class="pricing-cards animate-on-scroll">
             <div class="pricing-card">
@@ -180,7 +180,7 @@
                     <li>✓ Permanent chat history</li>
                     <li>✓ Dedicated account manager</li>
                 </ul>
-                <a href="#contact" class="btn secondary-btn">Contact Sales</a>
+                <a href="#contact" class="btn secondary-btn" onclick="smoothScrollToContact()">Contact Sales</a>
             </div>
         </div>
     </section>
@@ -197,7 +197,7 @@
         </div>
     </section>
     <section>
-        <footer class="site-footer">
+        <footer id="contact" class="site-footer">
             <div class="footer-container">
                 <div class="footer-grid">
                     <!-- Company Info -->
@@ -205,10 +205,25 @@
                         <h3>ImageChat</h3>
                         <p>Transforming images into conversations with cutting-edge AI technology.</p>
                         <div class="social-links">
-                            <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                            <!-- Facebook -->
+                            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+                                <i class="fab fa-facebook-f" style="color: #1877f2;"></i>
+                            </a>
+                            
+                            <!-- Twitter -->
+                            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+                                <i class="fab fa-twitter" style="color: #1da1f2;"></i>
+                            </a>
+                            
+                            <!-- Instagram -->
+                            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+                                <i class="fab fa-instagram" style="color: #e4405f;"></i>
+                            </a>
+                            
+                            <!-- LinkedIn -->
+                            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                                <i class="fab fa-linkedin-in" style="color: #0077b5;"></i>
+                            </a>
                         </div>
                     </div>
         
@@ -228,11 +243,11 @@
                     <div class="footer-col">
                         <h3>Contact Us</h3>
                         <ul class="contact-info">
-                            <li><i class="fas fa-map-marker-alt"></i> 123 AI Street, Tech City, IN 560001</li>
-                            <li><i class="fas fa-phone"></i> +91 86300 12345</li>
-                            <li><i class="fas fa-envelope"></i> hello@imagechat.com</li>
-                            <li><i class="fas fa-headset"></i> Support: support@imagechat.com</li>
-                            <li><i class="fas fa-briefcase"></i> Sales: sales@imagechat.com</li>
+                            <li><i class="fas fa-map-marker-alt"></i> 24, Cunningham Road, Bangalore, Karnataka 560052</li>
+                            <li><i class="fas fa-mobile-alt"></i> +91 98765 43210</li>
+                            <li><i class="fas fa-envelope"></i> contact@imagechat.in</li>
+                            <li><i class="fas fa-headset"></i> Support: support@imagechat.in</li>
+                            <li><i class="fas fa-briefcase"></i> Sales: sales@imagechat.in</li>
                         </ul>
                     </div>
                 </div>
@@ -254,6 +269,7 @@
 
 <!-- JavaScript for animations and interactions -->
 <script>
+    
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -283,6 +299,7 @@
         elements.forEach(el => observer.observe(el));
     };
 
+    
     // Typewriter effect
     const typeWriter = () => {
         const element = document.querySelector('.typewriter');
@@ -345,5 +362,14 @@
         initCarousel();
         initDemoPlayer();
     });
+    function smoothScrollToContact() {
+    const contactSection = document.getElementById('contact');
+    if (contactSection) {
+        contactSection.scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+    return false; // Prevent default anchor behavior
+}
 </script>
 {% endblock %}
