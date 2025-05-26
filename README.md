@@ -32,8 +32,6 @@ aadi/  # Project root
 └── instance/             # Auto-generated
     └── database.db       # SQLite database file
 ```
-
-```markdown
 # AI-Powered Image Chatbot
 
 ![Demo Animation](static/demo-animation.gif)
@@ -56,7 +54,7 @@ A conversational Flask web application that uses Google's Gemini API to analyze 
 - **AI Engine**: Gemini 1.5 Flash API
 - **Database**: SQLite with SQLAlchemy
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
-
+   ```
 ## 🚀 Quick Start
 
 1. **Clone the repository**
