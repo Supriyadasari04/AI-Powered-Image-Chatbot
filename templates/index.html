@@ -361,6 +361,8 @@
                 document.getElementById('emptyState').style.display = 'flex';
                 resetChatUI();
             }
+            
+            // If no chats left, show empty state
             if (document.querySelectorAll('.chat-item').length === 0) {
                 document.getElementById('chatList').innerHTML = '<p class="no-chats">No chats yet</p>';
             }

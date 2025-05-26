@@ -12,12 +12,12 @@
         <div class="nav-container">
             <span class="logo">ImageChat</span>
             <div class="nav-links">
+                <a href="{{ url_for('landing') }}" class="nav-link">Home</a>
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('home') }}" class="nav-link">Home</a>
+                    <a href="{{ url_for('app_home') }}" class="nav-link">App</a>
                     <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
                     <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
                 {% else %}
-                    <a href="{{ url_for('landing') }}" class="nav-link">Home</a>
                     <a href="{{ url_for('login') }}" class="nav-link">Login</a>
                     <a href="{{ url_for('signup') }}" class="nav-link">Sign Up</a>
                 {% endif %}
