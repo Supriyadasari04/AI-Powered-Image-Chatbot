@@ -121,6 +121,7 @@ Visit `http://localhost:5000` in your browser.
 
 Pull requests are welcome! For major changes, please open an issue first.
 
-## 📜 License
+## 📜 License  
+This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LICENSE) file for details.  
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
