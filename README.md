@@ -56,8 +56,7 @@ A conversational Flask web application that uses Google's Gemini API to analyze 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 
 ## 🚀 Quick Start
-```
-```
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Supriyadasari04/AI-Powered-Image-Chatbot.git
