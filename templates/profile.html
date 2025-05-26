@@ -15,45 +15,59 @@
                 <label for="username">Username</label>
                 <input type="text" id="username" value="{{ current_user.username }}">
             </div>
-            
+            <button id="cancelBtn" class="btn secondary-btn" disabled>Cancel</button>
+            <button id="saveBtn" class="btn primary-btn" disabled>Save Changes</button>
             <div class="password-change">
                 <h3>Change Password</h3>
                 <div class="form-group">
                     <label for="current_password">Current Password</label>
                     <div class="password-input">
-                        <input type="password" id="current_password">
-                        <span class="toggle-password" onclick="togglePassword('current_password')">👁️</span>
+                        <input type="password" id="current_password" required>
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="new_password">New Password</label>
                     <div class="password-input">
-                        <input type="password" id="new_password">
-                        <span class="toggle-password" onclick="togglePassword('new_password')">👁️</span>
+                        <input type="password" id="new_password" required>
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
                     </div>
                     <small class="hint">Must be at least 8 characters with 1 number and 1 uppercase letter</small>
                 </div>
                 <div class="form-group">
                     <label for="confirm_password">Confirm New Password</label>
                     <div class="password-input">
-                        <input type="password" id="confirm_password">
-                        <span class="toggle-password" onclick="togglePassword('confirm_password')">👁️</span>
+                        <input type="password" id="confirm_password" required>
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
                     </div>
                 </div>
                 <button id="changePasswordBtn" class="btn primary-btn">Change Password</button>
             </div>
-            
-            <div class="profile-actions">
-                <button id="cancelBtn" class="btn secondary-btn" disabled>Cancel</button>
-                <button id="saveBtn" class="btn primary-btn" disabled>Save Changes</button>
-                <button id="deleteBtn" class="btn danger-btn">Delete Account</button>
-            </div>
+            <button id="deleteBtn" class="btn danger-btn">Delete Account</button>
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // Password toggle functionality
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        }); 
+
         const nameInput = document.getElementById('name');
         const usernameInput = document.getElementById('username');
         const saveBtn = document.getElementById('saveBtn');
@@ -181,12 +195,6 @@
             }
         });
         
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === 'password' ? 'text' : 'password';
-        }
-        
-        window.togglePassword = togglePassword;
     });
 </script>
 {% endblock %}
