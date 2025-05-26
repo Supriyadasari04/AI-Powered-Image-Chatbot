@@ -48,13 +48,13 @@ A conversational Flask web application that uses Google's Gemini API to analyze 
 
 ## 🛠️ Tech Stack
 
-![Flask](static/uploads/flask-logo.png) ![Gemini](static/uploads/gemini-logo.png) ![SQLite](static/uploads/sqlite-logo.png)
+![Flask](static/flask-logo.png) ![Gemini](static/gemini-logo.png) ![SQLite](static/sqlite-logo.png)
 
 - **Backend**: Python Flask
 - **AI Engine**: Gemini 1.5 Flash API
 - **Database**: SQLite with SQLAlchemy
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
-   ```
+```
 ## 🚀 Quick Start
 
 1. **Clone the repository**
