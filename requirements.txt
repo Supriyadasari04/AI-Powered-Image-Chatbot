@@ -5,3 +5,5 @@ google-generativeai
 pillow
 python-dotenv
 werkzeug
+
+gunicorn  # WSGI server for production
