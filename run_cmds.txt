@@ -1,6 +1,6 @@
 >git bash
     git clone <git repo link>
-    cd aadi
+    cd <folder_name>
     code .
 
 delete instance folder
