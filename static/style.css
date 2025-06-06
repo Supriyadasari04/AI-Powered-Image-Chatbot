@@ -1904,3 +1904,60 @@ html {
         transform: translateY(0);
     }
 }
+#speechTimer {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  animation: pulse 1s infinite alternate;
+}
+
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+/* Voice Input States */
+#startListening.recording {
+  background: #ff4444;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+#voiceWave {
+  display: none;
+  height: 20px;
+  margin-left: 10px;
+}
+/* Stop button styling */
+#stopSpeaking {
+  background: #ff4444;
+  display: none;
+}
+.input-container {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  #questionInput {
+    width: 100%;
+    min-height: 40px;
+    max-height: 200px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    box-sizing: border-box;
+    resize: none;
+    overflow-y: hidden;
+    line-height: 1.5;
+    transition: height 0.2s ease-out;
+  }
+
+  /* Button row styling */
+  .button-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .button-row > .btn {
+    flex: 1;
+  }

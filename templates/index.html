@@ -33,9 +33,16 @@
             <div class="chat-section">
                 <div class="chat-history" id="chatHistory"></div>
                 <div class="input-area">
-                    <div class="input-group">
-                        <input type="text" id="questionInput" placeholder="Ask about the image..." style="flex: 4;">
-                        <button id="askBtn" class="btn primary-btn" style="flex: 1;">Ask</button>
+                    <div class="input-container">
+                        <textarea id="questionInput" placeholder="Ask about the image..." rows="1"></textarea>
+                    </div>
+                    <div class="button-row">
+                        <button id="askBtn" class="btn primary-btn">Ask</button>
+                        <button id="voiceToggleBtn" class="btn primary-btn">
+                          <span id="micIcon">🎙️</span> <span id="micText">Speak</span>
+                        </button>
+                        <button id="speakResponse" class="btn primary-btn">🔊 Read</button>
+                        <button id="stopSpeaking" class="btn">⏹ Stop</button>
                     </div>
                     <button id="uploadBtn" class="btn secondary-btn">Upload New Image</button>
                 </div>
@@ -48,6 +55,7 @@
     let currentChatId = null;
     let currentImageUrl = null;
 
+    
     function resetChatUI() {
         document.getElementById('imagePreview').style.display = 'none';
         document.getElementById('chatSection').style.display = 'none';
@@ -258,6 +266,8 @@
             </div>
         `;
         input.value = '';
+        input.style.height = 'auto';  // Reset to initial height
+        input.style.height = '40px';  // Set to default height
         chatHistory.scrollTop = chatHistory.scrollHeight;
 
         try {
@@ -373,5 +383,125 @@
             alert('Failed to delete chat');
         }
     }
+    const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+    let recognition;
+    let isRecording = false;
+    
+    voiceToggleBtn.addEventListener('click', toggleRecording);
+    
+    function toggleRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+    
+    function startRecording() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Speech recognition not supported in this browser. Try Chrome or Edge.");
+        return;
+      }
+    
+      // UI Feedback
+      voiceToggleBtn.classList.add('recording');
+      document.getElementById('micIcon').textContent = '⏹';
+      document.getElementById('micText').textContent = 'Stop';
+      isRecording = true;
+    
+      // Initialize recognition
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+    
+      recognition.onresult = (e) => {
+        let interim = '';
+        let final = '';
+        
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            final += e.results[i][0].transcript;
+          } else {
+            interim += e.results[i][0].transcript;
+          }
+        }
+        
+        document.getElementById('questionInput').value = final || interim;
+      };
+    
+      recognition.onerror = (e) => {
+        console.error('Speech error:', e.error);
+        stopRecording();
+      };
+    
+      recognition.start();
+    }
+    
+    function stopRecording() {
+      if (!recognition) return;
+      
+      voiceToggleBtn.classList.remove('recording');
+      document.getElementById('micIcon').textContent = '🎙️';
+      document.getElementById('micText').textContent = 'Speak';
+      isRecording = false;
+      
+      recognition.stop();
+    }
+    
+    const speakResponseBtn = document.getElementById('speakResponse');
+    const stopSpeakingBtn = document.getElementById('stopSpeaking');
+    let currentUtterance = null;
+    
+    speakResponseBtn.addEventListener('click', () => {
+    
+      if (currentUtterance) {
+        window.speechSynthesis.cancel();
+      }
+      
+      const chatHistory = document.getElementById('chatHistory');
+      const lastBotMessage = chatHistory.querySelector('.bot-message:last-child');
+      
+      if (!lastBotMessage) {
+        alert("No response to read.");
+        return;
+      }
+      
+      currentUtterance = new SpeechSynthesisUtterance(lastBotMessage.textContent);
+      
+      // Enhanced voice settings (ChatGPT-like)
+      currentUtterance.rate = 1.0;
+      currentUtterance.pitch = 1.0;
+      currentUtterance.volume = 1.0;
+      currentUtterance.lang = 'en-US';
+      
+      // UI Feedback
+      speakResponseBtn.style.display = 'none';
+      stopSpeakingBtn.style.display = 'inline-block';
+      
+      currentUtterance.onend = () => {
+        speakResponseBtn.style.display = 'inline-block';
+        stopSpeakingBtn.style.display = 'none';
+      };
+      
+      window.speechSynthesis.speak(currentUtterance);
+    });
+    
+    stopSpeakingBtn.addEventListener('click', () => {
+      window.speechSynthesis.cancel();
+      speakResponseBtn.style.display = 'inline-block';
+      stopSpeakingBtn.style.display = 'none';
+    });
+    const questionInput = document.getElementById('questionInput');
+
+    questionInput.addEventListener('input', function() {
+      this.style.height = 'auto'; // Reset height
+      this.style.height = (this.scrollHeight) + 'px';
+    });
+    // Initialize height on load
+    window.addEventListener('load', function() {
+      questionInput.style.height = questionInput.scrollHeight + 'px';
+    });
 </script>
 {% endblock %}
